@@ -1,41 +1,39 @@
 pipeline {
-  agent any
+    agent any
 
-  tools {
-    maven 'MAVEN'  
-    jdk 'DefaultJDK'  
-  }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        git url: 'https://github.com/OlladapuShruthi/WebProject.git', branch: 'master'
-      }
+    tools {
+        // Make sure these names match your Jenkins Global Tool Config
+        maven 'MAVEN'
+        jdk 'DefaultJDK'
     }
 
-    stage('Build & Test') {
-      steps {
-        // Use bat instead of sh on Windows
-        bat 'mvn clean test'
-      }
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Checking out code from GitHub...'
+                git url: 'https://github.com/OlladapuShruthi/WebProject.git', branch: 'master'
+            }
+        }
+
+        stage('Build & Package') {
+            steps {
+                echo 'Running Maven build...'
+                // Use 'bat' on Windows instead of 'sh'
+                bat 'mvn clean package'
+            }
+        }
+
+        stage('Archive Artifact') {
+            steps {
+                echo 'Archiving WAR file...'
+                archiveArtifacts artifacts: '**/target/*.war', fingerprint: true
+            }
+        }
     }
 
-    stage('Package') {
-      steps {
-        bat 'mvn clean package'
-      }
+    post {
+        always {
+            echo 'Pipeline finished!'
+        }
     }
-
-    stage('Archive Artifact') {
-      steps {
-        archiveArtifacts artifacts: '**/target/*.war', fingerprint: true
-      }
-    }
-  }
-
-  post {
-    always {
-      junit '**/target/surefire-reports/*.xml'
-    }
-  }
 }
